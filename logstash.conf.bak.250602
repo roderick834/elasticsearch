@@ -1,0 +1,31 @@
+input {
+  beats {
+    port => 5044
+  }
+}
+
+filter {
+  grok {
+    match => {
+      "message" => '%{IP:client_ip} - - \[%{HTTPDATE:timestamp}\] "%{WORD:method} %{URIPATH:request} HTTP/%{NUMBER:http_version}" %{NUMBER:status:int} %{NUMBER:bytes:int}'
+    }
+  }
+
+  # Day 5 → 加 log_source 欄位！
+  mutate {
+    add_field => { "log_source" => "nginx-access" }  # 這邊你可以自己改！例如 app-log / syslog 等
+    add_tag => [ "from-logstash" ]  # 可以加 tag 方便 trace
+  }
+}
+
+output {
+  stdout { codec => rubydebug }
+
+  elasticsearch {
+    index => "%{log_source}-%{+YYYY.MM.dd}"  # 🚀 Day 5 重點 → index 自動分類！
+    hosts => "${ELASTIC_HOSTS}"
+    user => "${ELASTIC_USER}"
+    password => "${ELASTIC_PASSWORD}"
+    ssl_certificate_authorities => ["/usr/share/logstash/certs/ca.crt"]
+  }
+}

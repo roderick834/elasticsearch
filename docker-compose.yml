@@ -1,29 +1,18 @@
-version: "3.8"
-
+#####因 9 版 es 限制 data 只能使用 docker volume ，無法用 bind mount 因此添加
 volumes:
-  certs:
-    driver: local
   esdata01:
     driver: local
   kibanadata:
     driver: local
-  metricbeatdata01:
-    driver: local
-  filebeatdata01:
-    driver: local
-  logstashdata01:
+  logstashdata:
     driver: local
 
-networks:
-  default:
-    name: elastic
-    external: false
 
 services:
   setup:
     image: docker.elastic.co/elasticsearch/elasticsearch:${STACK_VERSION}
     volumes:
-      - certs:/usr/share/elasticsearch/config/certs
+      - ${ROOT_VOLUM}/certs:/usr/share/elasticsearch/config/certs
     user: "0"
     command: >
       bash -c '
@@ -61,14 +50,13 @@ services:
         fi;
         echo "Setting file permissions"
         chown -R root:root config/certs;
-        find . -type d -exec chmod 750 \{\} \;;
-        find . -type f -exec chmod 640 \{\} \;;
+        find . -type d -exec chmod 755 \{\} \;;
+        find . -type f -exec chmod 755 \{\} \;;
         echo "Waiting for Elasticsearch availability";
         until curl -s --cacert config/certs/ca/ca.crt https://es01:9200 | grep -q "missing authentication credentials"; do sleep 30; done;
         echo "Setting kibana_system password";
         until curl -s -X POST --cacert config/certs/ca/ca.crt -u "elastic:${ELASTIC_PASSWORD}" -H "Content-Type: application/json" https://es01:9200/_security/user/kibana_system/_password -d "{\"password\":\"${KIBANA_PASSWORD}\"}" | grep -q "^{}"; do sleep 10; done;
-        echo "All done!";
-      '
+        echo "All done!";'
     healthcheck:
       test: ["CMD-SHELL", "[ -f config/certs/es01/es01.crt ]"]
       interval: 1s
@@ -80,10 +68,11 @@ services:
       setup:
         condition: service_healthy
     image: docker.elastic.co/elasticsearch/elasticsearch:${STACK_VERSION}
+    container_name: es01
     labels:
       co.elastic.logs/module: elasticsearch
     volumes:
-      - certs:/usr/share/elasticsearch/config/certs
+      - ${ROOT_VOLUM}/certs:/usr/share/elasticsearch/config/certs
       - esdata01:/usr/share/elasticsearch/data
     ports:
       - ${ES_PORT}:9200
@@ -123,17 +112,18 @@ services:
     depends_on:
       es01:
         condition: service_healthy
+    container_name: kibana
     image: docker.elastic.co/kibana/kibana:${STACK_VERSION}
     labels:
       co.elastic.logs/module: kibana
     volumes:
-      - certs:/usr/share/kibana/config/certs
+      - ${ROOT_VOLUM}/certs/:/usr/share/kibana/config/certs
       - kibanadata:/usr/share/kibana/data
     ports:
       - ${KIBANA_PORT}:5601
     environment:
       - SERVERNAME=kibana
-      - ELASTICSEARCH_HOSTS=https://es01:9200
+      - ELASTICSEARCH_HOSTS=https://es01:${ES_PORT}
       - ELASTICSEARCH_USERNAME=kibana_system
       - ELASTICSEARCH_PASSWORD=${KIBANA_PASSWORD}
       - ELASTICSEARCH_SSL_CERTIFICATEAUTHORITIES=config/certs/ca/ca.crt
@@ -151,70 +141,26 @@ services:
       timeout: 10s
       retries: 120
 
-  metricbeat01:
-    depends_on:
-      es01:
-        condition: service_healthy
-      kibana:
-        condition: service_healthy
-    image: docker.elastic.co/beats/metricbeat:${STACK_VERSION}
-    user: root
-    volumes:
-      - certs:/usr/share/metricbeat/certs
-      - metricbeatdata01:/usr/share/metricbeat/data
-      - "./metricbeat.yml:/usr/share/metricbeat/metricbeat.yml:ro"
-      - "/var/run/docker.sock:/var/run/docker.sock:ro"
-      - "/sys/fs/cgroup:/hostfs/sys/fs/cgroup:ro"
-      - "/proc:/hostfs/proc:ro"
-      - "/:/hostfs:ro"
-    environment:
-      - ELASTIC_USER=elastic
-      - ELASTIC_PASSWORD=${ELASTIC_PASSWORD}
-      - ELASTIC_HOSTS=https://es01:9200
-      - KIBANA_HOSTS=http://kibana:5601
-      - LOGSTASH_HOSTS=http://logstash01:9600
-    command:
-      - --strict.perms=false
-
-  filebeat01:
-    depends_on:
-      es01:
-        condition: service_healthy
-    image: docker.elastic.co/beats/filebeat:${STACK_VERSION}
-    user: root
-    volumes:
-      - certs:/usr/share/filebeat/certs
-      - filebeatdata01:/usr/share/filebeat/data
-      - "./filebeat_ingest_data/:/usr/share/filebeat/ingest_data/"
-      - "./filebeat.yml:/usr/share/filebeat/filebeat.yml:ro"
-      - "/var/lib/docker/containers:/var/lib/docker/containers:ro"
-      - "/var/run/docker.sock:/var/run/docker.sock:ro"
-    environment:
-      - ELASTIC_USER=elastic
-      - ELASTIC_PASSWORD=${ELASTIC_PASSWORD}
-      - ELASTIC_HOSTS=https://es01:9200
-      - KIBANA_HOSTS=http://kibana:5601
-      - LOGSTASH_HOSTS=http://logstash01:9600
-    command:
-      - --strict.perms=false
-
   logstash01:
     depends_on:
       es01:
         condition: service_healthy
       kibana:
         condition: service_healthy
+    container_name: logstash
+    ports:
+      - ${LOGSTASH_PORT}:5044
     image: docker.elastic.co/logstash/logstash:${STACK_VERSION}
     labels:
       co.elastic.logs/module: logstash
-    user: root
+#    user: "1000:1000"
     volumes:
-      - certs:/usr/share/logstash/certs
-      - logstashdata01:/usr/share/logstash/data
+      - ${ROOT_VOLUM}/certs:/usr/share/logstash/certs
+      - logstashdata:/usr/share/logstash/data
       - "./logstash_ingest_data/:/usr/share/logstash/ingest_data/"
       - "./logstash.conf:/usr/share/logstash/pipeline/logstash.conf:ro"
     environment:
       - xpack.monitoring.enabled=false
       - ELASTIC_USER=elastic
       - ELASTIC_PASSWORD=${ELASTIC_PASSWORD}
-      - ELASTIC_HOSTS=https://es01:9200
+      - ELASTIC_HOSTS=https://es01:${ES_PORT}

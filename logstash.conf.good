@@ -1,0 +1,38 @@
+input {
+  file {
+    path => "/usr/share/logstash/test2.log"
+    start_position => "beginning"
+    sincedb_path => "/dev/null"
+  }
+}
+
+filter {
+  mutate {
+    add_tag => [ "nginx-access_192.168.10.175", "prod" ]
+  }
+
+
+  grok {
+    match => {
+      "message" => '%{IP:client_ip} - - \[%{HTTPDATE:timestamp}\] "?%{WORD:method} %{URIPATH:request} HTTP/%{NUMBER:http_version}"? %{NUMBER:status:int} %{GREEDYDATA:bytes}'
+    }
+  }
+  mutate {
+    convert => { "bytes" => "string" }
+  }
+
+
+}
+
+
+
+output {
+  stdout { codec => rubydebug }
+  elasticsearch {
+    index => "nginx-access-10.175"
+    hosts=> "${ELASTIC_HOSTS}"
+    user=> "${ELASTIC_USER}"
+    password=> "${ELASTIC_PASSWORD}"
+    ssl_certificate_authorities => ["/usr/share/logstash/certs/ca.crt"]
+  }
+}

@@ -1,0 +1,118 @@
+name: versus
+host: 0.0.0.0
+port: 3000
+public_host: https://your-host.example
+
+# Proxy configuration (global settings)
+proxy:
+  url: ${PROXY_URL}           # HTTP/HTTPS/SOCKS5 proxy URL (e.g., http://proxy.example.com:8080)
+  username: ${PROXY_USERNAME} # Optional proxy username
+  password: ${PROXY_PASSWORD} # Optional proxy password
+
+alert:
+  debug_body: true
+
+  slack:
+    enable: false
+    token: ${SLACK_TOKEN}
+    channel_id: ${SLACK_CHANNEL_ID}
+    template_path: "config/slack_message.tmpl"
+    message_properties:
+      button_text: "Acknowledge Alert" # Custom text for the acknowledgment button
+      button_style: "primary" # Button style: "primary" (default blue), "danger" (red), or empty for default gray
+      disable_button: false # Set to true to disable the button, if you want to handle the alert acknowledgment in your own way
+  
+  telegram:
+    enable: true
+    bot_token: ${TELEGRAM_BOT_TOKEN}
+    chat_id: ${TELEGRAM_CHAT_ID}
+    template_path: "config/telegram_message.tmpl"
+    use_proxy: false # Set to true to use global proxy settings for Telegram API calls
+
+  viber:
+    enable: false
+    api_type: ${VIBER_API_TYPE} # "bot" or "channel" - defaults to "channel"
+    bot_token: ${VIBER_BOT_TOKEN}
+    user_id: ${VIBER_USER_ID}
+    channel_id: ${VIBER_CHANNEL_ID}
+    template_path: "config/viber_message.tmpl"
+    use_proxy: false # Set to true to use global proxy settings for Viber API calls
+
+  email:
+    enable: false
+    smtp_host: ${SMTP_HOST}
+    smtp_port: ${SMTP_PORT}
+    username: ${SMTP_USERNAME}
+    password: ${SMTP_PASSWORD}
+    to: ${EMAIL_TO}
+    subject: ${EMAIL_SUBJECT}
+    template_path: "config/email_message.tmpl"
+
+  msteams:
+    enable: false # Default value, will be overridden by MSTEAMS_ENABLE env var
+    power_automate_url: ${MSTEAMS_POWER_AUTOMATE_URL} # Power Automate HTTP trigger URL (required)
+    template_path: "config/msteams_message.tmpl"
+    other_power_urls: # Optional: Enable overriding the default Power Automate flow using query parameters, eg /api/incidents?msteams_other_power_url=qc
+      qc: ${MSTEAMS_OTHER_POWER_URL_QC}
+      
+  lark:
+    enable: false # Default value, will be overridden by LARK_ENABLE env var
+    webhook_url: ${LARK_WEBHOOK_URL} # Lark webhook URL (required)
+    template_path: "config/lark_message.tmpl"
+    use_proxy: false # Set to true to use global proxy settings for Lark API calls
+    other_webhook_urls: # Optional: Enable overriding the default webhook URL using query parameters, eg /api/incidents?lark_other_webhook_url=dev
+      dev: ${LARK_OTHER_WEBHOOK_URL_DEV}
+      prod: ${LARK_OTHER_WEBHOOK_URL_PROD}
+
+queue:
+  enable: true
+  debug_body: true
+
+  # AWS SNS
+  sns:
+    enable: false
+    https_endpoint_subscription_path: /sns # URI to receive SNS messages, e.g. ${host}:${port}/sns or ${https_endpoint_subscription}/sns
+    # Options If you want to automatically create an sns subscription
+    https_endpoint_subscription: ${SNS_HTTPS_ENDPOINT_SUBSCRIPTION} # If the user configures an HTTPS endpoint, then an SNS subscription will be automatically created, e.g. https://your-domain.com
+    topic_arn: ${SNS_TOPIC_ARN}
+
+  # AWS SQS
+  sqs:
+    enable: false
+    queue_url: your_sqs_queue_url
+  # GCP Pub Sub
+  pubsub:
+    enable: false
+  # Azure Event Bus
+  azbus:
+    enable: false
+
+oncall:
+  ### Enable overriding using query parameters
+  # /api/incidents?oncall_enable=false => Set to `true` or `false` to enable or disable on-call for a specific alert
+  # /api/incidents?oncall_wait_minutes=0 => Set the number of minutes to wait for acknowledgment before triggering on-call. Set to `0` to trigger immediately
+  initialized_only: false  # Initialize on-call feature but don't enable by default, requires 'oncall_enable=true' in query parameters
+  enable: false # Use this to enable or disable on-call for all alerts
+  wait_minutes: 3 # If you set it to 0, it means there's no need to check for an acknowledgment, and the on-call will trigger immediately
+  provider: aws_incident_manager # Valid values: "aws_incident_manager" or "pagerduty"
+
+  aws_incident_manager: # Used when provider is "aws_incident_manager"
+    response_plan_arn: ${AWS_INCIDENT_MANAGER_RESPONSE_PLAN_ARN}
+    other_response_plan_arns: # Optional: Enable overriding the default response plan ARN using query parameters, eg /api/incidents?awsim_other_response_plan=infra
+      infra: ${AWS_INCIDENT_MANAGER_OTHER_RESPONSE_PLAN_ARN_INFRA}
+      app: ${AWS_INCIDENT_MANAGER_OTHER_RESPONSE_PLAN_ARN_APP}
+      db: ${AWS_INCIDENT_MANAGER_OTHER_RESPONSE_PLAN_ARN_DB}
+
+  pagerduty: # Used when provider is "pagerduty"
+    routing_key: ${PAGERDUTY_ROUTING_KEY} # Integration/Routing key for Events API v2 (REQUIRED)
+    other_routing_keys: # Optional: Enable overriding the default routing key using query parameters, eg /api/incidents?pagerduty_other_routing_key=infra
+      infra: ${PAGERDUTY_OTHER_ROUTING_KEY_INFRA}
+      app: ${PAGERDUTY_OTHER_ROUTING_KEY_APP}
+      db: ${PAGERDUTY_OTHER_ROUTING_KEY_DB}
+
+redis: # Required for on-call functionality
+  insecure_skip_verify: true # dev only
+  host: ${REDIS_HOST}
+  port: ${REDIS_PORT}
+  password: ${REDIS_PASSWORD}
+  db: 0

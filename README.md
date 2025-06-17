@@ -4,7 +4,7 @@
 
 ---
 
-## 🇺🇸 English Version
+## English Version
 
 ### Introduction
 ### The versus-incident image used in this project can be obtained as described at: https://github.com/versuscontrol/versus-incident/pkgs/container/versus-incident
@@ -46,7 +46,7 @@ Pull Requests and Issues are welcome 🙌
 
 ---
 
-## 🇹🇼 中文版本
+##  中文版本
 
 ### 專案簡介
 ### 專案中 image versus-incident 的獲取方式請參考 https://github.com/versuscontrol/versus-incident/pkgs/container/versus-incident

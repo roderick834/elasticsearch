@@ -15,11 +15,9 @@ An additional service `versus-incident` is integrated:
 
 Sample screenshots:
 
-![Connector Configuration](...)
-
-<img width="1480" alt="Screenshot" src="..."/>
-
-![Alert Result](...)
+![Connector Configuration](https://github.com/user-attachments/assets/a03f9f79-d313-4e79-b94d-8f44995e91a9)
+<img width="1480" alt="Screenshot" src="https://github.com/user-attachments/assets/940ab8ee-d48e-414a-a55a-0b2745fe537e" />
+![Alert Result](https://github.com/user-attachments/assets/519cfb81-4310-47d2-a498-fed72d66b996)
 
 ### Services
 
@@ -57,11 +55,9 @@ Pull Requests and Issues are welcome 🙌
 
 範例畫面：
 
-![Connector Configuration](...)
-
-<img width="1480" alt="截圖" src="..."/>
-
-![Alert Result](...)
+![Connector Configuration](https://github.com/user-attachments/assets/a03f9f79-d313-4e79-b94d-8f44995e91a9)
+<img width="1480" alt="截圖" src="https://github.com/user-attachments/assets/940ab8ee-d48e-414a-a55a-0b2745fe537e" />
+![Alert Result](https://github.com/user-attachments/assets/519cfb81-4310-47d2-a498-fed72d66b996)
 
 ### 服務說明
 

@@ -1,55 +1,88 @@
-# Getting started with the Elastic Stack and Docker-Compose
+# Elastic Stack with Docker Compose + Telegram Alerts
 
-This repo is in reference to the blog [Getting started with the Elastic Stack and Docker-Compose](https://www.elastic.co/blog/getting-started-with-the-elastic-stack-and-docker-compose).
-
-Please feel free to ask any questions via issues [here](https://github.com/elkninja/elastic-stack-docker-part-one/issues), our [Community Slack](https://ela.st/slack), or over in our [Discuss Forums](https://discuss.elastic.co/).
-
-Pull Requests welcome :)
+[中文版本請往下滑 / For English version, please scroll up]
 
 ---
 
-## 專案簡介
+## 🇺🇸 English Version
 
-本專案整合了額外的 service：**versus-incident**  
-> [versus-incident container](https://github.com/versuscontrol/versus-incident/pkgs/container/versus-incident)
+### Introduction
 
-透過整合，Kibana 可於 Stack Management → Connectors 中建立 Webhook 連接器，  
-進而將告警 (Alert) 透過 Telegram Bot 發送通知。
+This project extends the original [Getting started with the Elastic Stack and Docker-Compose](https://www.elastic.co/blog/getting-started-with-the-elastic-stack-and-docker-compose).
+
+An additional service `versus-incident` is integrated:
+- This allows Kibana to send alerts to a Telegram Bot via Webhook Connector.
+
+Sample screenshots:
+
+![Connector Configuration](...)
+
+<img width="1480" alt="Screenshot" src="..."/>
+
+![Alert Result](...)
+
+### Services
+
+| Service | Description |
+|---|---|
+| setup | Initialize Elastic Stack |
+| es01 | Elasticsearch Service |
+| kibana | Kibana Service |
+| logstash01 | Logstash for processing and forwarding logs to ES |
+| versus-incident | Centralized webhook receiver that forwards alerts to Telegram |
+
+More about `versus-incident`:  
+https://github.com/versuscontrol/versus-incident/pkgs/container/versus-incident
+
+### Environment Configuration
+
+Please update `.env` file before starting:
+
+| Variable | Description |
+|---|---|
+| TG_TK | Telegram Bot Token |
+| TG_CI | Telegram Chat ID |
+
+Pull Requests and Issues are welcome 🙌
+
+---
+
+## 🇹🇼 中文版本
+
+### 專案簡介
+
+本專案基於 [Elastic 官方部落格範例](https://www.elastic.co/blog/getting-started-with-the-elastic-stack-and-docker-compose) 進行擴充，整合了 `versus-incident` 服務：
+
+- 讓 Kibana 可以透過 Webhook Connector 發送告警到 Telegram Bot。
 
 範例畫面：
 
-![Connector Configuration](https://github.com/user-attachments/assets/a03f9f79-d313-4e79-b94d-8f44995e91a9)
-<img width="1480" alt="截圖 2025-06-17 14 59 54" src="https://github.com/user-attachments/assets/940ab8ee-d48e-414a-a55a-0b2745fe537e" />
-![Alert Result](https://github.com/user-attachments/assets/519cfb81-4310-47d2-a498-fed72d66b996)
+![Connector Configuration](...)
 
----
+<img width="1480" alt="截圖" src="..."/>
 
-## 服務說明
+![Alert Result](...)
 
-| Service | 說明 |
+### 服務說明
+
+| 服務 | 功能說明 |
 |---|---|
-| **setup** | 初始化 Elastic Stack 環境 |
-| **es01** | Elasticsearch Service |
-| **kibana** | Kibana Service |
-| **logstash01** | Logstash (負責 log 加工與輸送至 ES) |
-| **versus-incident** | 統一接收 Webhook，負責將告警訊息轉發至 Telegram Bot  |
+| setup | Elastic Stack 初始化 |
+| es01 | Elasticsearch 服務 |
+| kibana | Kibana 服務 |
+| logstash01 | 負責處理並轉發 log 到 ES |
+| versus-incident | Webhook 統一接收，負責轉發告警至 Telegram |
 
-> 詳細 `versus-incident` 配置說明可參考官方文件：  
-> https://github.com/versuscontrol/versus-incident/pkgs/container/versus-incident
+`versus-incident` 詳細設定文件：  
+https://github.com/versuscontrol/versus-incident/pkgs/container/versus-incident
 
----
+### 環境變數設定
 
-## ⚠ 初次使用注意事項
-
-請務必修改 `.env` 檔案內以下兩個變數：
+請在啟動前修改 `.env` 檔案：
 
 | 變數 | 說明 |
 |---|---|
-| `TG_TK` | Telegram Bot Token |
-| `TG_CI` | Telegram Chat ID |
+| TG_TK | Telegram Bot Token |
+| TG_CI | Telegram Chat ID |
 
-設定正確後，即可透過 Kibana Alert 將告警推送至 Telegram。
-
----
-
-Pull Request 與 Issue 回報非常歡迎 🙌
+歡迎 PR 或提問 Issue 🙌
